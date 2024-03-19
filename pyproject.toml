@@ -1,0 +1,124 @@
+[project]
+name = "xbot"
+description = "Generative AI Support Bot"
+dynamic = ["version"]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi~=0.109",
+    "pydantic-settings~=2.1",
+    "uvicorn~=0.27",
+    "qdrant-client~=1.7",
+    "transformers~=4.37",
+    "sentence-transformers~=2.3",
+    "tiktoken~=0.5",
+    "uuid6~=2024.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black~=24.1",
+    "boto3~=1.34",
+    "pre-commit~=3.6",
+    "pytest~=8.0",
+    "ruff~=0.2"
+]
+
+[tool.setuptools.dynamic]
+version = { file = "version" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests*"]
+
+[build-system]
+requires = ["setuptools~=69.0"]
+
+[tool.black]
+line-length = 120
+exclude-extends = "node_modules"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+exclude = ["**/node_modules", "**/__pycache__", "**/.*", "build"]
+strictListInference = true
+strictDictionaryInference = true
+strictParameterNoneValue = true
+reportTypedDictNotRequiredAccess = false
+
+[tool.ruff]
+# Compatibility between Ruff and Black
+# https://beta.ruff.rs/docs/faq/#is-ruff-compatible-with-black
+line-length = 120
+
+# rules to enable/ignore
+select = [
+    # pyflakes
+    "F",
+    # pycodestyle
+    "E",
+    "W",
+    # type annotations
+    "ANN",
+    # pep8-naming
+    "N",
+    # bugbear
+    "B",
+    # isort
+    "I",
+    # flake8-unused-arguments
+    "ARG",
+    # flake8-self
+    "SLF",
+    # pyupgrade
+    "UP",
+    # perflint
+    "PERF",
+    # ruff-specific
+    "RUF",
+]
+exclude = [
+    "tests/*",
+    "examples/*"
+]
+
+ignore = [
+    # allow untyped self and cls args, and no return type from dunder methods
+    "ANN003",
+    "ANN002",
+    "ANN101",
+    "ANN102",
+    "ANN204",
+    "B904",
+    "ANN401",
+    # allow == True because pandas dataframes overload equality
+    "E712",
+]
+# first-party imports for sorting
+src = ["."]
+fix = true
+show-fixes = true
+
+[tool.ruff.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+
+[tool.ruff.per-file-ignores]
+# test functions don't need return types
+"tests/*" = ["ANN201", "ANN202"]
+"app/utils.py" = ["B904"]
+
+[tool.ruff.flake8-annotations]
+# allow *args: Any, **kwargs: Any
+allow-star-arg-any = true
+
+[tool.ruff.flake8-bugbear]
+# https://github.com/tiangolo/fastapi/discussions/7463
+extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends", "fastapi.Query", "fastapi.params.Query"]
+
+[tool.pytest.ini_options]
+markers = ['qdrant', 'transformers']
+pythonpath = [
+  "tests", "."
+]

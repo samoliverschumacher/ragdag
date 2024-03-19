@@ -1,0 +1,187 @@
+components:
+  schemas:
+    GenerateRequest:
+      properties:
+        user_query:
+          title: User Query
+          type: string
+      required:
+      - user_query
+      title: GenerateRequest
+      type: object
+    GenerateResponse:
+      properties:
+        generated_text:
+          title: Generated Text
+          type: string
+      required:
+      - generated_text
+      title: GenerateResponse
+      type: object
+    GetArticleResponse:
+      properties:
+        created_by:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created By
+        created_date:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Created Date
+        doc_id:
+          title: Doc Id
+          type: string
+        text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text
+      required:
+      - doc_id
+      - text
+      title: GetArticleResponse
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    PatchArticleItem:
+      properties:
+        created_by:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created By
+        created_date:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Created Date
+        doc_id:
+          title: Doc Id
+          type: string
+        text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text
+      required:
+      - doc_id
+      - text
+      title: PatchArticleItem
+      type: object
+    PatchArticleRequest:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PatchArticleItem'
+          title: Items
+          type: array
+      required:
+      - items
+      title: PatchArticleRequest
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+info:
+  title: FastAPI
+  version: 0.1.0
+openapi: 3.1.0
+paths:
+  /xbot/collection/articles:
+    patch:
+      operationId: patch_articles_xbot_collection_articles_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchArticleRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Patch Articles
+  /xbot/collection/articles/{doc_id}:
+    get:
+      operationId: get_article_xbot_collection_articles__doc_id__get
+      parameters:
+      - in: path
+        name: doc_id
+        required: true
+        schema:
+          title: Doc Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetArticleResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Article
+  /xbot/generate:
+    post:
+      operationId: generate_xbot_generate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Generate

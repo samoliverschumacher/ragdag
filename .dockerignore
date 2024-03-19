@@ -1,0 +1,15 @@
+# these files are ignored for both the test & prod dockerfiles
+.gitignore
+.cruft.json
+.dockerignore
+docs/
+infra/
+node_modules/
+*.egg-info/
+Dockerfile
+docker-compose.yaml
+*.md
+xop-*.yaml
+*.code-workspace
+*.iml
+.venv/
