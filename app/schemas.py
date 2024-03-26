@@ -7,6 +7,7 @@ class GenerateRequest(BaseModel):
     """`user_query`: `str`,
     `metdata`: `dict`
     """
+
     user_query: str
     metadata: dict = {}
 
@@ -15,7 +16,8 @@ class CleansedRequest(GenerateRequest):
     """
     Users query has no sensitive information that might be leaked to other services.
     """
-    text: str = Field(..., alias='user_query')
+
+    text: str = Field(..., alias="user_query")
     user_id: str = None
 
     def __init__(self, **data):

@@ -1,0 +1,79 @@
+# This is a basic workflow to help you get started with Actions
+
+name: DevWorkflow
+
+# Controls when the action will run.
+on:
+  workflow_dispatch:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  # push:
+  #   branches:
+  #     - '*'
+  # pull_request:
+  #   branches:
+  #     - '*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  # workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  cancel_previous:
+    name: Cancel any still running workflows on this branch
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+  test:
+    # The type of runner that the job will run on
+    strategy:
+      fail-fast: true
+      matrix:
+        python-versions: ['3.11']  # Related to the current Docker base image
+        os: [ubuntu-22.04]  # not sure which Linux OS is compatible with production environment
+    runs-on: ${{ matrix.os }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out repository under $GITHUB_WORKSPACE, so the job can access it
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-versions }}
+
+      - name: list files, python version
+        run: |
+          ls -l .
+          python -c 'import sys; print(sys.version)'
+
+      - name: test with "make test"
+        run:
+          make test
+
+      # - name: Install dependencies
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install poetry tox tox-gh-actions
+
+      # - name: list files, python version
+      #   run: |
+      #     ls -l .
+      #     python -c 'import sys; print(sys.version)'
+        
+      # - name: test with tox
+      #   run:
+      #     tox
+
+      # - name: list files after tox
+      #   run: ls -l .
+
+      # - uses: codecov/codecov-action@v1  # see: https://github.com/marketplace/actions/codecov?version=v1.5.2#usage
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }} # Must set a secret with this name in github. not required for public repos
+      #     fail_ci_if_error: true
+      #     files: coverage.xml
