@@ -47,6 +47,7 @@ retrieve = Retrieve()
 rerank = Rerank()
 generate = Generate()
 pipeline = [retrieve, rerank, generate]
+create_links(pipeline)
 # Initialise, and run the pipeline
 text = 'A question?'
 data, err, sentinel = {}, [], RAGStage.RETRIEVE
