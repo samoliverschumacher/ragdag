@@ -15,12 +15,11 @@ LOG_LEVEL = os.environ.get('LOG_LEVEL') or 'INFO'
 echo = False
 if LOG_LEVEL == 'DEBUG':
     echo = True
+    
+print('Creating database for metrics: ', MONITOR_DB_URI)
 engine = create_engine(MONITOR_DB_URI, echo=echo)  # Change the database name if needed
 
 Base = declarative_base()
-
-Base.metadata.create_all(engine)
-
 
 class Eval(Base):
     """Define data model for the table 'eval', to store metrics for later evaluation."""
@@ -29,6 +28,7 @@ class Eval(Base):
     event_id = Column(String)
     log = Column(JSON)
 
+Base.metadata.create_all(engine)
 
 def write_data(event_id, log):
     """
