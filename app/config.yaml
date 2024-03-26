@@ -1,40 +1,39 @@
-all:
-  REDACTED_INFORMATION_TOKEN_MAP: &id001
-    Financial information: '<REDACTED: Financial information>'
-    Persons names: '<REDACTED: Persons names>'
-  au_privacy_config:
-    port: 5000
-    redaction_map: *id001
-    url: privacy-service
-  qdrant_retrieval_config:
-    collection_name: articles_short_100
-    embedding_timeout: 10.0
-    encoder: all-MiniLM-L6-v2
-    filter_on_user_metadata: true
-    host: localhost
-    port: 6333
-    search_params: {}
-    top_k: 2
-  basic_consolidator_config:
-    strategy: simple
-    token_limit: 1000
-  gpt2_generation_config:
-    model_config:
-      device: cpu
-      max_length: 300
-      model: gpt2
-      no_repeat_ngram_size: 3
-      num_return_sequences: 1
-    no_llm_fallback_strategy: references
-    prompt_template: basic
-    redacted_information_token_map: *id001
-    retries: 3
-    seed: 42
-    timeout: 10.0
-  semantic_cache_config:
-    encoder_config: {}
-    match_tolerance: 1000.0
-    metric: cosine
-    size: null
-  svm_reranker_config:
-    top_k: null
+REDACTED_INFORMATION_TOKEN_MAP: &id001
+  Financial information: '<REDACTED: Financial information>'
+  Persons names: '<REDACTED: Persons names>'
+au_privacy_config:
+  port: 5000
+  redaction_map: *id001
+  url: privacy-service
+qdrant_retrieval_config:
+  collection_name: articles_short_100
+  embedding_timeout: 10.0
+  encoder: all-MiniLM-L6-v2
+  filter_on_user_metadata: true
+  host: localhost
+  port: 6333
+  search_params: {}
+  top_k: 2
+basic_consolidator_config:
+  strategy: simple
+  token_limit: 1000
+gpt2_generation_config:
+  model_config:
+    device: cpu
+    max_length: 300
+    model: gpt2
+    no_repeat_ngram_size: 3
+    num_return_sequences: 1
+  no_llm_fallback_strategy: references
+  prompt_template: basic
+  redacted_information_token_map: *id001
+  retries: 3
+  seed: 42
+  timeout: 10.0
+semantic_cache_config:
+  encoder_config: {}
+  match_tolerance: 1000.0
+  metric: cosine
+  size: null
+svm_reranker_config:
+  top_k: null

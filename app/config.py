@@ -48,7 +48,7 @@ def _get_config(config_name: str) -> dict:
 
     config_name = config_name.replace('-', '_') + '_config'
     if config_name not in config:
-        raise ValueError(f'Unknown config name: {config_name}')
+        raise ValueError(f'Unknown config name: {config_name} from config path: {fpath}')
 
     return config[config_name]
 
