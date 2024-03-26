@@ -13,6 +13,7 @@ dependencies = [
     "sentence-transformers~=2.3",
     "tiktoken~=0.5",
     "uuid6~=2024.1",
+    "sqlalchemy~=2.0",
 ]
 
 [project.optional-dependencies]
@@ -21,7 +22,7 @@ dev = [
     "boto3~=1.34",
     "pre-commit~=3.6",
     "pytest~=8.0",
-    "ruff~=0.2"
+    "ruff~=0.2",
 ]
 
 [tool.setuptools.dynamic]
