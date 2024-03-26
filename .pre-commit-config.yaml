@@ -9,12 +9,15 @@ repos:
         entry: .venv/bin/ruff
         language: system
         types: [python]
+        files: ^app
       - id: black
         name: black
         entry: .venv/bin/black
         language: system
         types: [python]
         require_serial: true
+        # define files to exclude, because pre-commit doesnt pay attention to pyproject.toml
+        files: ^app
       - id: pyright
         name: pyright
         entry: node_modules/.bin/pyright

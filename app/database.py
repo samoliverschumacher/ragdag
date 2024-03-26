@@ -1,6 +1,4 @@
 import os
-from typing import Dict, List
-from app import ROOT_DIR
 
 import dotenv
 from sqlalchemy import JSON, Column, Integer, String, create_engine
@@ -9,30 +7,34 @@ from sqlalchemy.orm import sessionmaker
 
 dotenv.load_dotenv()
 
-MONITOR_DB_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or 'sqlite:///sample.db'
-LOG_LEVEL = os.environ.get('LOG_LEVEL') or 'INFO'
+MONITOR_DB_URI = os.environ.get("SQLALCHEMY_DATABASE_URI") or "sqlite:///sample.db"
+LOG_LEVEL = os.environ.get("LOG_LEVEL") or "INFO"
 
 echo = False
-if LOG_LEVEL == 'DEBUG':
+if LOG_LEVEL == "DEBUG":
     echo = True
-    
-print('Creating database for metrics: ', MONITOR_DB_URI)
+
+print("Creating database for metrics: ", MONITOR_DB_URI)
 engine = create_engine(MONITOR_DB_URI, echo=echo)  # Change the database name if needed
 
 Base = declarative_base()
 
+
 class Eval(Base):
     """Define data model for the table 'eval', to store metrics for later evaluation."""
-    __tablename__ = 'eval'
+
+    __tablename__ = "eval"
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(String)
     log = Column(JSON)
 
+
 Base.metadata.create_all(engine)
+
 
 def write_data(event_id, log):
     """
-    Write data to the database using the provided event ID and log. 
+    Write data to the database using the provided event ID and log.
     """
 
     Session = sessionmaker(bind=engine)
@@ -42,7 +44,7 @@ def write_data(event_id, log):
         session.commit()
 
 
-def get_data(event_id: str | None = None) -> List[Dict]:
+def get_data(event_id: str | None = None) -> list[dict]:
     """
     Function to retrieve data from the evals database based on the provided event ID.
     """
@@ -56,11 +58,11 @@ def get_data(event_id: str | None = None) -> List[Dict]:
 
         results = []
         for eval in evals:
-            results.append({'event_id': eval.event_id, 'log': eval.log})
+            results.append({"event_id": eval.event_id, "log": eval.log})
     return results
 
 
-def delete_rows(event_id: str | None = None, table_name: str = 'eval') -> None:
+def delete_rows(event_id: str | None = None, table_name: str = "eval") -> None:
     """Delete rows from a table. If no event_id is given, delete all rows."""
     session = sessionmaker(bind=engine)
     with session() as db_session:

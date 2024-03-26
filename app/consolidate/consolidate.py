@@ -5,11 +5,12 @@ import app.logconfig
 from app.pipe import ErrorStack, Process, RAGStage
 from app.retrieve.retrieve import Context, ContextWithMetadata
 
-logger = app.logconfig.setup_logger('root')
+logger = app.logconfig.setup_logger("root")
 
 
 class AllDocumentsExceedContextWindowError(Exception):
     """None of the retrieved documents fit in the context window for the LLM."""
+
     pass
 
 
@@ -20,14 +21,13 @@ class SimpleConsolidator(Process):
     def __init__(self, config: dict) -> None:
         super().__init__(config)
         self.config = config
-        self._text_to_tokens: Callable = config.get(
-            'text_to_tokens_func', lambda text: [c for c in text])
+        self._text_to_tokens: Callable = config.get("text_to_tokens_func", lambda text: [c for c in text])
 
     def simple_consolidate(
-            self, contexts: list[ContextWithMetadata | Context],
-            config: dict) -> list[Context] | list[ContextWithMetadata]:
-        token_limit = config['token_limit']
-        strategy = config['strategy']
+        self, contexts: list[ContextWithMetadata | Context], config: dict
+    ) -> list[Context] | list[ContextWithMetadata]:
+        token_limit = config["token_limit"]
+        strategy = config["strategy"]
 
         def _format(c: ContextWithMetadata | Context) -> str:
             if isinstance(c, ContextWithMetadata):
@@ -37,9 +37,9 @@ class SimpleConsolidator(Process):
             return template.format(text=str(c.text))
 
         # limit contexts based on a strategy, and a token limit
-        if strategy == 'score_weighted':
+        if strategy == "score_weighted":
             contexts = sorted(contexts, key=lambda x: x.score, reverse=True)
-        elif strategy == 'simple':
+        elif strategy == "simple":
             contexts = sorted(contexts, key=lambda x: len(_format(x)))
         else:
             contexts = contexts
@@ -55,7 +55,9 @@ class SimpleConsolidator(Process):
                 if idx < len(contexts) - 1:
                     doc_lengths = [len(self._text_to_tokens(str(_format(c)))) for c in contexts]
                     doc_ids = [c.doc_id for c in contexts]
-                    docs_as_text = ','.join([f'({i=} {l=})' for i, l in zip(doc_ids, doc_lengths)])
+                    docs_as_text = ",".join(
+                        [f"({i=} {length=})" for i, length in zip(doc_ids, doc_lengths, strict=False)]
+                    )
                     msg = f"{token_limit=} Documents: {docs_as_text}"
                     raise AllDocumentsExceedContextWindowError(msg)
 
@@ -67,19 +69,17 @@ class SimpleConsolidator(Process):
 
         return new_contexts
 
-    def _process(self, text: Any, data: dict, errors: ErrorStack,
-                 sentinel: RAGStage) -> tuple[Any, dict, ErrorStack, RAGStage]:
+    def _process(self, text: Any, data: dict, errors: ErrorStack, *_) -> tuple[Any, dict, ErrorStack, RAGStage]:
         context_items: list[Context] | list[ContextWithMetadata] = text
 
         try:
-            consolidated_contexts = self.simple_consolidate(
-                context_items, self.config)
+            consolidated_contexts = self.simple_consolidate(context_items, self.config)
             next_text: list[Context] | list[ContextWithMetadata] = consolidated_contexts
-            next_data = {**data, 'contexts': consolidated_contexts}
+            next_data = {**data, "contexts": consolidated_contexts}
         except Exception as e:
             errors.append((self.stage, e))
             logger.error(e)
             next_text = text
-            next_data = {**data, 'contexts': context_items}
+            next_data = {**data, "contexts": context_items}
 
         return next_text, next_data, errors, self.next_stage

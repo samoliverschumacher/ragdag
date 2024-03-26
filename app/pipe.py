@@ -5,6 +5,7 @@ from typing import Any
 
 class RAGStage(enum.Enum):
     """SECURITY -> RCACHE -> REWRITE -> RETRIEVE -> RERANK -> CONSOLIDATE -> GENERATE -> WCACHE"""
+
     START = -1
     SECURITY = 0
     RCACHE = 1  # Read cache for semantically similar questions
@@ -58,14 +59,13 @@ class Process(ABC):
         return self._next_stage
 
     @abstractmethod
-    def _process(self, text: Any, data: dict, errors: ErrorStack,
-                 sentinel: RAGStage) -> tuple[Any, dict, ErrorStack, RAGStage]:
+    def _process(self, text: Any, data: dict, errors: ErrorStack, *_) -> tuple[Any, dict, ErrorStack, RAGStage]:
         """
-         - Process the task
-         - Return its errors, if not raised.
-         - Add to data, forward on data from previous tasks, or remove it.
-         - return text, data, errors, sentinel
-         - Must set the sentinel to a future stage
+        - Process the task
+        - Return its errors, if not raised.
+        - Add to data, forward on data from previous tasks, or remove it.
+        - return text, data, errors, sentinel
+        - Must set the sentinel to a future stage
         """
         ...
 
@@ -73,8 +73,9 @@ class Process(ABC):
         self._next_stage = self.stage.increment()
         self.config = config
 
-    def __call__(self, text: Any, data: dict, errors: ErrorStack,
-                 sentinel: RAGStage) -> tuple[Any, dict, ErrorStack, RAGStage]:
+    def __call__(
+        self, text: Any, data: dict, errors: ErrorStack, sentinel: RAGStage
+    ) -> tuple[Any, dict, ErrorStack, RAGStage]:
         """Calls the _process method if the sentinel is the current stage
         (Allows skipping stages, for example in a successful cache hit.)
 
@@ -85,13 +86,12 @@ class Process(ABC):
             next_sentinel = sentinel
             return text, data, errors, next_sentinel
 
-        next_text, next_data, next_errors, next_sentinel = self._process(
-            text, data, errors, sentinel)
+        next_text, next_data, next_errors, next_sentinel = self._process(text, data, errors, sentinel)
         return next_text, next_data, next_errors, next_sentinel
 
 
 def create_links(dag: list[Process]) -> None:
-    """Connects the objects in the DAG, setting the `_next_stage` 
+    """Connects the objects in the DAG, setting the `_next_stage`
     property to the `_stage` of the object that follows it in the list.
     """
     for i in range(len(dag) - 1):

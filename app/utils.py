@@ -4,8 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 
-def run_until_timeout(func: Callable, timeout: float,
-                      timeout_error_type: type[Exception], *args, **kwargs) -> Any:
+def run_until_timeout(func: Callable, timeout: float, timeout_error_type: type[Exception], *args, **kwargs) -> Any:
     """Runs the function in a separate thread and raises a exception if it exceeds the timeout.
 
     Args:
@@ -27,8 +26,7 @@ def run_until_timeout(func: Callable, timeout: float,
         try:
             return func(*args, **kwargs)
         except timeout_error_type:
-            raise timeout_error_type(
-                f"Function {func.__name__} took too long to respond")
+            raise timeout_error_type(f"Function {func.__name__} took too long to respond")
 
     # Create a partial function with the provided arguments
     wrapped_func = functools.partial(func_with_timeout, *args, **kwargs)
@@ -40,6 +38,5 @@ def run_until_timeout(func: Callable, timeout: float,
             # Wait for the function to complete, raise a timeout error if it exceeds the specified timeout
             result = future.result(timeout=timeout)
         except (Exception, timeout_error_type):
-            raise timeout_error_type(
-                f"Function {func.__name__} took too long to respond")
+            raise timeout_error_type(f"Function {func.__name__} took too long to respond")
     return result

@@ -11,12 +11,11 @@ from app.retrieve.retrieve import QDRANTRetriever
 from app.schemas import GenerateRequest
 from app.security.security import AccountNumberRedactor
 
-logger = app.logconfig.setup_logger('root')
-logger.debug('runner.py is running...')
+logger = app.logconfig.setup_logger("root")
+logger.debug("runner.py is running...")
 
 
-def run_dag(request: GenerateRequest, event_id: str,
-             processes: list[Process]) -> str:
+def run_dag(request: GenerateRequest, event_id: str, processes: list[Process]) -> str:
     """
     Runs the directed acyclic graph (DAG) defined by the given request, event ID, and list of processes,
     and returns the next text after processing all stages.
@@ -33,19 +32,15 @@ def run_dag(request: GenerateRequest, event_id: str,
     Returns:
         str: The next text after processing the entire DAG.
     """
-    next_text, data, errors, sentinel = request, {
-        'event_id': event_id
-    }, [], processes[0].stage
+    next_text, data, errors, sentinel = request, {"event_id": event_id}, [], processes[0].stage
     _err_counter = len(errors)
     for process in processes:
         t0 = time.time()
         logger.info(f"Running {process.stage=}")
-        next_text, data, errors, sentinel = process(next_text, data, errors,
-                                                    sentinel)
+        next_text, data, errors, sentinel = process(next_text, data, errors, sentinel)
         t1 = time.time()
         if len(errors) > _err_counter:
-            logger.error(
-                f"Error in {process.stage=}. Attempting to Continue...")
+            logger.error(f"Error in {process.stage=}. Attempting to Continue...")
             for error in errors:
                 logger.error(error)
             _err_counter = len(errors)
@@ -61,13 +56,13 @@ def rag_runner(request: GenerateRequest) -> tuple[str, str]:
     a DAG, and then runs the DAG to generate a response.
     """
 
-    privacy_config = get_config('au-privacy')
+    privacy_config = get_config("au-privacy")
     logger.debug(f"Privacy config: {privacy_config}")
-    retrieval_config = get_config('qdrant-retrieval')
+    retrieval_config = get_config("qdrant-retrieval")
     logger.debug(f"Retrieval config: {retrieval_config}")
-    consolidator_config = get_config('basic-consolidator')
+    consolidator_config = get_config("basic-consolidator")
     logger.debug(f"Consolidator config: {consolidator_config}")
-    generation_config = get_config('gpt2-generation')
+    generation_config = get_config("gpt2-generation")
     logger.debug(f"Generation config: {generation_config}")
 
     security_cleaner = AccountNumberRedactor(privacy_config)
@@ -78,13 +73,9 @@ def rag_runner(request: GenerateRequest) -> tuple[str, str]:
     event_id = str(uuid.uuid4()) + str(datetime.datetime.now())
     logger.info(f"Starting Xbot with {event_id=}")
 
-    dag = [
-        security_cleaner, document_retriever, context_consolidator,
-        prompt_reader
-    ]
+    dag = [security_cleaner, document_retriever, context_consolidator, prompt_reader]
     create_links(dag)
 
-    logger.info('Initialising R.A.G. DAG: ' +
-                ' -> '.join([f"{d.stage.name}" for d in dag]))
+    logger.info("Initialising R.A.G. DAG: " + " -> ".join([f"{d.stage.name}" for d in dag]))
     response = run_dag(request, event_id, dag)
     return response, event_id
