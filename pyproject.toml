@@ -9,7 +9,6 @@ dependencies = [
     "pydantic-settings~=2.1",
     "uvicorn~=0.27",
     "qdrant-client~=1.7",
-    "transformers~=4.37",
     "sentence-transformers~=2.3",
     "tiktoken~=0.5",
     "uuid6~=2024.1",
@@ -24,6 +23,8 @@ dev = [
     "pytest~=8.0",
     "ruff~=0.2",
 ]
+gpt2 = ["transformers~=4.37"]
+openai = ["openai"]
 
 [tool.setuptools.dynamic]
 version = { file = "version" }
@@ -119,7 +120,10 @@ allow-star-arg-any = true
 extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends", "fastapi.Query", "fastapi.params.Query"]
 
 [tool.pytest.ini_options]
-markers = ['qdrant', 'transformers']
+markers = ['qdrant', 'transformers', 'openai']
 pythonpath = [
   "tests", "."
 ]
+
+# TODO: can't get this working, find a way to dynamically skip tests for github action runners. possibly skipif using an env variable, set to true by default. Let a GH runner define a test-openai that only tests those?
+# addopts = "-m not openai"

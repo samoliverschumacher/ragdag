@@ -38,6 +38,24 @@ def gpt2_generation_config():
         seed=42,
     )
 
+def openai_generation_config():
+    model_cfg = {}
+    model_cfg["model"] = "gpt-3.5-turbo"
+    model_cfg["encoding"] = "cl100k_base"
+    model_cfg["max_length"] = 100
+    model_cfg["num_return_sequences"] = 1
+    model_cfg["no_repeat_ngram_size"] = 3
+    model_cfg["device"] = "cpu"
+    return dict(
+        redacted_information_token_map=REDACTED_INFORMATION_TOKEN_MAP,
+        model_config=model_cfg,
+        retries=3,
+        no_llm_fallback_strategy="documents",
+        timeout=5,
+        prompt_template="basic",
+        seed=42,
+    )
+
 
 def create_collection_from_text(client: QdrantClient, data: list[dict], collection_name: str) -> None:
     """

@@ -1,12 +1,18 @@
+import os
 import time
 
 import pytest
 import stubs
+from openai.types.chat.chat_completion import ChatCompletionMessage
 
-from app.generate.generate import GPT2Generator, LLMTimeoutError
+from app.generate.generate import GPT2Generator, LLMTimeoutError, OpenAIGenerator
 from app.pipe import RAGStage
 from app.retrieve.retrieve import Context, ContextWithMetadata
 from app.schemas import GenerateRequest
+
+
+# DEfault is to ignore tests requiring openai access
+SKIP_OPENAI = os.environ.get("SKIP_OPENAI", True)
 
 
 @pytest.fixture
@@ -36,6 +42,52 @@ def mock_llm_no_response(monkeypatch):
 
     monkeypatch.setattr('app.generate.generate.gpt2_infer', mock_response)
 
+@pytest.mark.openai
+@pytest.mark.skipif(SKIP_OPENAI)
+class TestOpenAIGenerator:
+
+    @classmethod
+    def setup_class(cls):
+        cls.config = stubs.openai_generation_config()
+        cls.generator = OpenAIGenerator(cls.config)
+
+    @pytest.mark.openai
+    @pytest.mark.skipif(SKIP_OPENAI)
+    def test_call_opeanai(self):
+        response, token_count = self.generator._generate_text('What is the meaning of life? some info to help: "friends", "family", "42"')
+        assert isinstance(response, ChatCompletionMessage)
+        assert response.content != ''
+        assert token_count > 0
+
+    @pytest.mark.openai
+    @pytest.mark.skipif(SKIP_OPENAI)
+    def test_generate(self, mock_llm_response_slow, monkeypatch):
+        """Given context information, and a user question, syntesise an answer.
+        
+        Expected behaviour:
+            - Calls LLM, raises LLMTimeoutError if LLM is not available after timeout seconds.
+            
+        Set-up:
+            - Slow Generation model returns a repsonse after 1.0 seconds. (mocked)
+        """
+        query = "What is the meaning of life?"
+        documents = ['friends', 'family', '42']
+        doc_ids = ['id1', 'id2', 'id3']
+
+        contexts = [Context(doc_id=doc_id, text=doc) for doc_id, doc in zip(doc_ids, documents, strict=False)]
+        response = self.generator.synthesize_response(GenerateRequest(user_query=query), contexts, event_id='')
+
+        assert '42' in response
+
+        cfg = stubs.openai_generation_config()
+        cfg['timeout'] = 0.01
+        monkeypatch.setattr(self.generator, 'config', cfg)
+
+        with pytest.raises(LLMTimeoutError):
+            response = self.generator.synthesize_response(GenerateRequest(user_query=query), contexts, event_id='')
+        
+    
+@pytest.mark.transformers
 class TestGPT2Generator:
 
     @classmethod

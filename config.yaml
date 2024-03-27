@@ -30,6 +30,18 @@ gpt2_generation_config:
   retries: 3
   seed: 42
   timeout: 10.0
+openai_35_config:
+  model_config:
+    device: cpu
+    max_length: 300
+    model: gpt-3.5-turbo
+    encoding: cl100k_base
+  no_llm_fallback_strategy: references
+  prompt_template: basic
+  redacted_information_token_map: *id001
+  retries: 3
+  seed: 42
+  timeout: 10.0
 semantic_cache_config:
   encoder_config: {}
   match_tolerance: 1000.0

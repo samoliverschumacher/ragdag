@@ -1,8 +1,11 @@
+import os
 import time
 from typing import Any
+import tiktoken
 
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from openai import OpenAI
 
 import app.logconfig
 from app.pipe import ErrorStack, Process, RAGStage
@@ -89,7 +92,7 @@ class GPT2Generator(Process):
             str: The generated response.
         """
 
-        prompt = self._format_prompt(user_query.user_query, contexts)
+        prompt = self._format_prompt(self.template, user_query.user_query, contexts, self.eos_token)
         if self.config["model_config"]["max_length"] - len(prompt) <= 10:
             logger.error(
                 "Query is too long to fit in the model's context window. {prompt_len}, {max_len}".format(
@@ -155,10 +158,44 @@ class GPT2Generator(Process):
         )
         return text, tc
 
-    def _format_prompt(self, user_query: str, contexts: list[Context] | list[ContextWithMetadata]) -> str:
+    @staticmethod
+    def _format_prompt(template: str, user_query: str, contexts: list[Context] | list[ContextWithMetadata], eos_token: str | None) -> str:
         context_text = "".join([c.text for c in contexts])
-        query = self.template.format(user_query=user_query, context=context_text)
-        return query + self.eos_token
+        query = template.format(user_query=user_query, context=context_text)
+        return query + eos_token if eos_token else ''
+
+
+
+class OpenAIGenerator(GPT2Generator):
+    """Same as GPT2Generator, but uses OpenAI's API as the model.
+
+    OPENAI_API_KEY=abc123
+    OpenAI defaults to using: os.environ.get("OPENAI_API_KEY")
+    """
+
+    def __init__(self, config: dict) -> None:
+        self.config = config
+        self.template = "{user_query}{context}"
+        if config["prompt_template"] == "basic":
+            self.template = PROMPT_TEMPLATE
+
+        assert os.environ.get("OPENAI_API_KEY") != "", "OPENAI_API_KEY must be set to use OpenAIGenerator"
+
+        self.eos_token = None
+        self.client = OpenAI()
+        self.encoding = tiktoken.get_encoding(self.config['model_config']['encoding'])
+
+
+    def _generate_text(self, text: str) -> tuple[str, int]:
+        
+        message = self.template.format(user_query=text, context="")
+        num_tokens = len(self.encoding.encode(message))
+        completion = self.client.chat.completions.create(
+            model=self.config['model_config']['model'],
+            messages=[{"role": "user", "content": message}]
+        )
+        text = completion.choices[0].message
+        return text, num_tokens
 
 
 def gpt2_infer(
